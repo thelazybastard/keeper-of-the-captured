@@ -1,2 +1,2 @@
 # keeper-of-the-captured
-image folder daemon
+image folder organizer
