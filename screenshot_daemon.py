@@ -4,6 +4,8 @@
 #  - create list of keywords found in screenshots description - done
 #  - create folder names based on image description - done
 #  - create folders based on image description - done
+#  - add recursive scanning - done
+#  - add error handling
 
 from PIL import Image
 from transformers import CLIPProcessor, CLIPModel
@@ -21,9 +23,13 @@ def load_models():
 
 
 def scan_main_directory():
-    for image in pictures.iterdir():
-        yield image
-
+    image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
+    try:
+        for image in pictures.rglob('*'):
+            if image.is_file() and image.suffix in image_extensions:
+                yield image
+    except shutil.Error:
+        print("Folder already exists!")
 
 def load_image_contents_and_sort():
     images = scan_main_directory()
@@ -45,7 +51,7 @@ def load_image_contents_and_sort():
             folder_path.mkdir(parents=True, exist_ok=True)
             shutil.move(image, folder_path)
 
-load_image_contents()
+load_image_contents_and_sort()
 
 
 
