@@ -25,7 +25,7 @@ def scan_main_directory():
         yield image
 
 
-def load_image_contents():
+def load_image_contents_and_sort():
     images = scan_main_directory()
     model, processor = load_models()
     labels = all_keywords
