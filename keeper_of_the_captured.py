@@ -1,4 +1,4 @@
-# TODO: image daemon classifying screenshots based on data inside.
+# TODO: image daemon classifying images based on data inside.
 #  - use placeholder demo folder in pictures - done
 #  - extract data and convert to readable format - done
 #  - create list of keywords found in screenshots description - done
@@ -6,6 +6,7 @@
 #  - create folders based on image description - done
 #  - add recursive scanning - done
 #  - add error handling - done
+#  - add dry run
 
 from PIL import Image
 from transformers import CLIPProcessor, CLIPModel
