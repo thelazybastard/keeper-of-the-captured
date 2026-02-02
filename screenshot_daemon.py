@@ -5,7 +5,7 @@
 #  - create folder names based on image description - done
 #  - create folders based on image description - done
 #  - add recursive scanning - done
-#  - add error handling
+#  - add error handling - done
 
 from PIL import Image
 from transformers import CLIPProcessor, CLIPModel
@@ -17,10 +17,13 @@ import shutil
 pictures = Path.home() / "Pictures/demo"
 
 def load_models():
-    model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
-    processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
-    return model, processor
-
+    try:
+        model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+        processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+        return model, processor
+    except Exception as e:
+        print(f"Failed to load models: {e}")
+        return None, None
 
 def scan_main_directory():
     image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
@@ -28,28 +31,40 @@ def scan_main_directory():
         for image in pictures.rglob('*'):
             if image.is_file() and image.suffix in image_extensions:
                 yield image
-    except shutil.Error:
-        print("Folder already exists!")
+    except (OSError, PermissionError) as e:
+        print(f"Error scanning directory {pictures}: {e}")
 
 def load_image_contents_and_sort():
     images = scan_main_directory()
     model, processor = load_models()
     labels = all_keywords
 
+    if model is None:
+        print("Could not load models, exiting...")
+        exit()
+
     for image in images:
-        each_image = Image.open(image)
+        try:
+            each_image = Image.open(image)
 
-        inputs = processor(text=labels, images=each_image, return_tensors="pt", padding=True)
+            inputs = processor(text=labels, images=each_image, return_tensors="pt", padding=True)
 
-        with torch.no_grad():
-            outputs = model(**inputs)
-            keyword_probability = outputs.logits_per_image.softmax(dim=1)[0]
-            predicted_keyword = labels[keyword_probability.argmax()]
-            folder_name = keyword_to_folder[predicted_keyword]
+            with torch.no_grad():
+                outputs = model(**inputs)
+                keyword_probability = outputs.logits_per_image.softmax(dim=1)[0]
+                predicted_keyword = labels[keyword_probability.argmax()]
+                folder_name = keyword_to_folder[predicted_keyword]
 
-            folder_path = pictures / folder_name
-            folder_path.mkdir(parents=True, exist_ok=True)
-            shutil.move(image, folder_path)
+                folder_path = pictures / folder_name
+                folder_path.mkdir(parents=True, exist_ok=True)
+                shutil.move(image, folder_path)
+
+        except (IOError, OSError) as e:
+            print(f"Failed to process {image.name}: {e}")
+            continue
+        except Exception as e:
+            print(f"Unexpected error with {image.name}: {e}")
+            continue
 
 load_image_contents_and_sort()
 
