@@ -14,7 +14,8 @@ import torch
 from image_keywords import all_keywords, keyword_to_folder
 import shutil
 
-pictures = Path.home() / "Pictures/demo"
+user_input = input("Enter directory name (Must be in Users home directory i.e Videos, Music, Downloads, etc): ")
+pictures = Path.home() / user_input
 
 def load_models():
     try:
