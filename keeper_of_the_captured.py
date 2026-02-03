@@ -12,7 +12,8 @@
 #  - turn into windows taskbar - also lazy. maybe in the future
 #  - turn into bat file - done
 #  - create seperate downloader script and use local model installation - done
-#  - created exe file for casual users - done
+#  - integrate downloader script in main file and add check - done
+#  - checks if models path exists or not. if not download.
 
 from PIL import Image
 from transformers import CLIPProcessor, CLIPModel, logging
@@ -43,11 +44,28 @@ def ask_for_token():
     else:
         print("Continuing without token. You may see a warning (this is normal).")
 
-
 def load_models():
+    model_path = Path("./models/clip-model")
+    processor_path = Path("./models/clip-processor")
+
+    if not model_path.exists() or not processor_path.exists():
+        ask_for_token()
+
+        print("Performing one-time model installation!")
+
+        model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+        processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+
+        model_path.parent.mkdir(parents=True, exist_ok=True)
+        model.save_pretrained(model_path)
+        processor.save_pretrained(processor_path)
+
+        print("Download complete!\n")
+        return model, processor
+
     try:
-        model = CLIPModel.from_pretrained("./models/clip-model")
-        processor = CLIPProcessor.from_pretrained("./models/clip-processor")
+        model = CLIPModel.from_pretrained(model_path)
+        processor = CLIPProcessor.from_pretrained(processor_path)
         return model, processor
     except Exception as e:
         print(f"Failed to load models: {e}")
@@ -84,6 +102,7 @@ def load_image_contents_and_sort(preview_mode=True):
                 folder_name = keyword_to_folder[predicted_keyword]
 
                 if preview_mode:
+                    print("Scan complete!")
                     for img in images:
                         print(f"{img.name} will be moved to {folder_name}")
                 elif not preview_mode:
@@ -102,7 +121,6 @@ def load_image_contents_and_sort(preview_mode=True):
 
 def preview_then_execute():
     hide_warnings()
-    ask_for_token()
     load_image_contents_and_sort(preview_mode=True)
     confirmation = input("Proceed with cleanup? (y/n): ")
 
