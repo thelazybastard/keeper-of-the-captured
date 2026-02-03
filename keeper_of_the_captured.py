@@ -8,8 +8,9 @@
 #  - add error handling - done
 #  - add dry run - done
 #  - hide model process in terminal - done
-#  - create a seperate thread for CLIP loading
-#  - turn into windows taskbar
+#  - create a seperate thread for CLIP loading - lazy. maybe in the future
+#  - turn into windows taskbar - also lazy. maybe in the future
+#  - turn into bat file - done
 
 from PIL import Image
 from transformers import CLIPProcessor, CLIPModel, logging
