@@ -12,6 +12,7 @@
 #  - turn into windows taskbar - also lazy. maybe in the future
 #  - turn into bat file - done
 #  - create seperate downloader script and use local model installation - done
+#  - created exe file for casual users - done
 
 from PIL import Image
 from transformers import CLIPProcessor, CLIPModel, logging
