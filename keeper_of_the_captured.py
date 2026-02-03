@@ -36,7 +36,7 @@ def scan_main_directory():
     except (OSError, PermissionError) as e:
         print(f"Error scanning directory {pictures}: {e}")
 
-def load_image_contents_and_sort():
+def load_image_contents_and_sort(preview_mode=True):
     images = scan_main_directory()
     model, processor = load_models()
     labels = all_keywords
@@ -57,9 +57,13 @@ def load_image_contents_and_sort():
                 predicted_keyword = labels[keyword_probability.argmax()]
                 folder_name = keyword_to_folder[predicted_keyword]
 
-                folder_path = pictures / folder_name
-                folder_path.mkdir(parents=True, exist_ok=True)
-                shutil.move(image, folder_path)
+                if preview_mode:
+                    for img in images:
+                        print(f"{img.name} will be moved to {folder_name}")
+                elif not preview_mode:
+                    folder_path = pictures / folder_name
+                    folder_path.mkdir(parents=True, exist_ok=True)
+                    shutil.move(image, folder_path)
 
         except (IOError, OSError) as e:
             print(f"Failed to process {image.name}: {e}")
@@ -68,11 +72,16 @@ def load_image_contents_and_sort():
             print(f"Unexpected error with {image.name}: {e}")
             continue
 
-load_image_contents_and_sort()
+def preview_then_execute():
+    load_image_contents_and_sort(preview_mode=True)
+    confirmation = input("Proceed with cleanup? (y/n): ")
+
+    if confirmation.lower() == "y":
+        load_image_contents_and_sort(preview_mode=False)
 
 
 
-
+preview_then_execute()
 
 
 
