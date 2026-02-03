@@ -11,6 +11,7 @@
 #  - create a seperate thread for CLIP loading - lazy. maybe in the future
 #  - turn into windows taskbar - also lazy. maybe in the future
 #  - turn into bat file - done
+#  - create seperate downloader script and use local model installation - done
 
 from PIL import Image
 from transformers import CLIPProcessor, CLIPModel, logging
@@ -44,8 +45,8 @@ def ask_for_token():
 
 def load_models():
     try:
-        model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
-        processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+        model = CLIPModel.from_pretrained("./models/clip-model")
+        processor = CLIPProcessor.from_pretrained("./models/clip-processor")
         return model, processor
     except Exception as e:
         print(f"Failed to load models: {e}")
