@@ -8,6 +8,8 @@
 #  - add error handling - done
 #  - add dry run - done
 #  - hide model process in terminal - done
+#  - create a seperate thread for CLIP loading
+#  - turn into windows taskbar
 
 from PIL import Image
 from transformers import CLIPProcessor, CLIPModel, logging
@@ -23,18 +25,20 @@ warnings.filterwarnings("ignore")
 logging.set_verbosity_error()
 logging.disable_progress_bar()
 
-response = input("Do you have a HuggingFace token? (y/n): ").strip().lower()
-if response.lower() == "y":
-        token = input("Paste your token: ").strip()
-        if token:
-            os.environ["HF_TOKEN"] = token
-        else:
-            print("No token entered, continuing without authentication.")
-else:
-    print("Continuing without token. You may see a warning (this is normal).")
-
 user_input = input("Enter directory name (Must be in Users home directory i.e Videos, Music, Downloads, etc): ")
 pictures = Path.home() / user_input
+
+def ask_for_token():
+    response = input("Do you have a HuggingFace token? (y/n): ").strip().lower()
+    if response.lower() == "y":
+            token = input("Paste your token: ").strip()
+            if token:
+                os.environ["HF_TOKEN"] = token
+            else:
+                print("No token entered, continuing without authentication.")
+    else:
+        print("Continuing without token. You may see a warning (this is normal).")
+
 
 def load_models():
     try:
@@ -90,7 +94,10 @@ def load_image_contents_and_sort(preview_mode=True):
             print(f"Unexpected error with {image.name}: {e}")
             continue
 
+
+
 def preview_then_execute():
+    ask_for_token()
     load_image_contents_and_sort(preview_mode=True)
     confirmation = input("Proceed with cleanup? (y/n): ")
 
