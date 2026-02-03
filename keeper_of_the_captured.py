@@ -103,7 +103,8 @@ def preview_then_execute():
 
     if confirmation.lower() == "y":
         load_image_contents_and_sort(preview_mode=False)
-
+    elif confirmation.lower() == "n":
+        print("Come back soon! The Keeper is always at your service")
 
 
 preview_then_execute()
