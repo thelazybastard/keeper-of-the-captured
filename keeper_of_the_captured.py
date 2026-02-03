@@ -20,13 +20,14 @@ import shutil
 import os
 import warnings
 
-os.environ["HF_HUB_VERBOSITY"] = "error"
-warnings.filterwarnings("ignore")
-logging.set_verbosity_error()
-logging.disable_progress_bar()
-
 user_input = input("Enter directory name (Must be in Users home directory i.e Videos, Music, Downloads, etc): ")
 pictures = Path.home() / user_input
+
+def hide_warnings():
+    os.environ["HF_HUB_VERBOSITY"] = "error"
+    warnings.filterwarnings("ignore")
+    logging.set_verbosity_error()
+    logging.disable_progress_bar()
 
 def ask_for_token():
     response = input("Do you have a HuggingFace token? (y/n): ").strip().lower()
@@ -97,6 +98,7 @@ def load_image_contents_and_sort(preview_mode=True):
 
 
 def preview_then_execute():
+    hide_warnings()
     ask_for_token()
     load_image_contents_and_sort(preview_mode=True)
     confirmation = input("Proceed with cleanup? (y/n): ")
