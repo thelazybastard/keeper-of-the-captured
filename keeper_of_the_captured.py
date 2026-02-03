@@ -6,14 +6,32 @@
 #  - create folders based on image description - done
 #  - add recursive scanning - done
 #  - add error handling - done
-#  - add dry run
+#  - add dry run - done
+#  - hide model process in terminal - done
 
 from PIL import Image
-from transformers import CLIPProcessor, CLIPModel
+from transformers import CLIPProcessor, CLIPModel, logging
 from pathlib import Path
 import torch
 from image_keywords import all_keywords, keyword_to_folder
 import shutil
+import os
+import warnings
+
+os.environ["HF_HUB_VERBOSITY"] = "error"
+warnings.filterwarnings("ignore")
+logging.set_verbosity_error()
+logging.disable_progress_bar()
+
+response = input("Do you have a HuggingFace token? (y/n): ").strip().lower()
+if response.lower() == "y":
+        token = input("Paste your token: ").strip()
+        if token:
+            os.environ["HF_TOKEN"] = token
+        else:
+            print("No token entered, continuing without authentication.")
+else:
+    print("Continuing without token. You may see a warning (this is normal).")
 
 user_input = input("Enter directory name (Must be in Users home directory i.e Videos, Music, Downloads, etc): ")
 pictures = Path.home() / user_input
