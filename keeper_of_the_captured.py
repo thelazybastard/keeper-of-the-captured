@@ -1,20 +1,3 @@
-# TODO: image daemon classifying images based on data inside.
-#  - use placeholder demo folder in pictures - done
-#  - extract data and convert to readable format - done
-#  - create list of keywords found in screenshots description - done
-#  - create folder names based on image description - done
-#  - create folders based on image description - done
-#  - add recursive scanning - done
-#  - add error handling - done
-#  - add dry run - done
-#  - hide model process in terminal - done
-#  - create a seperate thread for CLIP loading - lazy. maybe in the future
-#  - turn into windows taskbar - also lazy. maybe in the future
-#  - turn into bat file - done
-#  - create seperate downloader script and use local model installation - done
-#  - integrate downloader script in main file and add check - done
-#  - checks if models path exists or not. if not download.
-
 from PIL import Image
 from transformers import CLIPProcessor, CLIPModel, logging
 from pathlib import Path

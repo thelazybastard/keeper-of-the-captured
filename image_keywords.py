@@ -239,7 +239,7 @@ occasions = ["holiday", "christmas", "halloween", "easter", "thanksgiving", "new
 historical = ["vintage", "historical", "old", "antique", "classic", "aged", "retro"]
 
 # ==========================
-# COMBINED MASTER LIST
+# MASTER LIST
 # ==========================
 
 all_keywords = (
@@ -283,155 +283,118 @@ all_keywords = (
 all_keywords = list(dict.fromkeys(all_keywords))
 
 # ==========================
-# KEYWORD TO FOLDER MAPPING
+# CATEGORICAL MAPPING
 # ==========================
 
 keyword_to_folder = {}
 
-# Social Media
 for kw in reddit + twitter + instagram + facebook + linkedin + discord + snapchat + tiktok:
     keyword_to_folder[kw] = "social_media"
 
-# Messaging
 for kw in whatsapp + telegram + imessage + slack + messenger:
     keyword_to_folder[kw] = "messaging"
 
-# Gaming
 for kw in steam + xbox + playstation + twitch + game_overlay:
     keyword_to_folder[kw] = "gaming"
 
-# Work/Productivity
 for kw in email + calendar + video_calls + documents + project_management:
     keyword_to_folder[kw] = "productivity"
 
-# Code/Development
 for kw in github + code_editor + terminal + stackoverflow:
     keyword_to_folder[kw] = "development"
 
-# People
 for kw in single_person + multiple_people + age_groups + people_actions + body_parts:
     keyword_to_folder[kw] = "people"
 
-# Clothing
 for kw in clothing_general + clothing_formal + clothing_casual + clothing_accessories:
     keyword_to_folder[kw] = "clothing"
 
-# Animals
 for kw in pets + farm_animals + wild_animals + birds + aquatic_animals + insects:
     keyword_to_folder[kw] = "animals"
 
-# Nature
 for kw in landscapes + water_scenes + sky_scenes + vegetation + weather + seasons:
     keyword_to_folder[kw] = "nature"
 
-# Technology
 for kw in tech_devices + tech_accessories + cameras:
     keyword_to_folder[kw] = "technology"
 
-# Household
 for kw in furniture + kitchen_items + home_decor:
     keyword_to_folder[kw] = "household"
 
-# Food & Drink
 for kw in meals + specific_foods + drinks + fruits + vegetables:
     keyword_to_folder[kw] = "food_drink"
 
-# Vehicles
 for kw in cars + two_wheelers + public_transport + other_vehicles:
     keyword_to_folder[kw] = "vehicles"
 
-# Tools & Equipment
 for kw in tools + sports_equipment + musical_instruments:
     keyword_to_folder[kw] = "equipment"
 
-# Buildings
 for kw in residential_buildings + commercial_buildings + landmarks + religious_buildings:
     keyword_to_folder[kw] = "buildings"
 
-# Indoor Spaces
 for kw in home_rooms + public_indoor + commercial_indoor:
     keyword_to_folder[kw] = "indoor"
 
-# Outdoor Spaces
 for kw in urban_outdoor + suburban_outdoor + rural_outdoor + recreational_outdoor + geographic:
     keyword_to_folder[kw] = "outdoor"
 
-# Events & Celebrations
 for kw in celebrations:
     keyword_to_folder[kw] = "celebrations"
 
-# Sports
 for kw in team_sports + individual_sports + winter_sports + water_sports:
     keyword_to_folder[kw] = "sports"
 
-# Entertainment
 for kw in performances + leisure_activities + travel:
     keyword_to_folder[kw] = "entertainment"
 
-# Work
 for kw in work_activities:
     keyword_to_folder[kw] = "work"
 
-# Art
 for kw in traditional_art + sculpture_art + street_art + graphic_design + patterns:
     keyword_to_folder[kw] = "art"
 
-# Photography
 for kw in photography_styles + photography_techniques:
     keyword_to_folder[kw] = "photography"
 
-# Documents
 for kw in official_documents + financial_documents + educational_documents + business_documents:
     keyword_to_folder[kw] = "documents"
 
-# Text
 for kw in text_general + text_formatting + languages + books_media:
     keyword_to_folder[kw] = "text"
 
-# Colors
 for kw in colors_basic + colors_shades:
     keyword_to_folder[kw] = "colors"
 
-# Mood & Style
 for kw in emotions_mood + style_general + style_visual:
     keyword_to_folder[kw] = "aesthetic"
 
-# Visual Quality
 for kw in quality + lighting + composition:
     keyword_to_folder[kw] = "visual_quality"
 
-# Memes
 for kw in meme_formats + meme_elements:
     keyword_to_folder[kw] = "memes"
 
-# Screenshots
 for kw in screenshot_conversations + screenshot_funny + screenshot_social:
     keyword_to_folder[kw] = "screenshots"
 
-# Reactions
 for kw in reactions:
     keyword_to_folder[kw] = "reactions"
 
-# Medical
 for kw in medical:
     keyword_to_folder[kw] = "medical"
 
-# Scientific
 for kw in scientific:
     keyword_to_folder[kw] = "scientific"
 
-# Maps
 for kw in maps:
     keyword_to_folder[kw] = "maps"
 
-# Charts & Graphs
 for kw in chart_types + chart_elements:
     keyword_to_folder[kw] = "charts"
 
-# Codes & Symbols
 for kw in qr_barcodes + logos_brands + flags + signs_symbols:
     keyword_to_folder[kw] = "symbols"
 
-# Time & Context
 for kw in time_of_day + occasions + historical:
     keyword_to_folder[kw] = "temporal"
