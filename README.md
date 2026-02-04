@@ -19,7 +19,7 @@ Keeper of the Captured scans a directory of your choice, analyzes each image usi
 
 Download the executable file - no Python installation or dependencies required!
 
-1. Download `keeper-of-the-captured.7z` from [Download Latest](https://github.com/thelazybastard/keeper-of-the-captured/releases/latest)
+1. Download `keeper-of-the-captured.7z` from [here](https://github.com/thelazybastard/keeper-of-the-captured/releases/latest)
 2. Extract the contents to your desired location
 3. Double click on keeper.exe
 4. **Note:** Currently it takes a while to startup, so don't panic if nothing shows up on screen. Give it a while to load.
