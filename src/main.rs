@@ -1,3 +1,5 @@
+// TODO: load ml model and feed image to ml model
+
 use std::io::{self, Write};
 use std::path::Path;
 use std::{env, fs};
