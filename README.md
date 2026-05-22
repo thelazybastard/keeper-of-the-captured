@@ -1,93 +1,123 @@
 # The Keeper of the Captured
 
-AI powered image sorter that automatically categorizes and sorts your photos into folders based on their content, not names.
+An AI-powered image sorter that automatically categorizes and sorts your photos into folders based on their content, not names.
 
 ## Purpose
 
-Keeper of the Captured scans a directory of your choice, analyzes each image using OpenAI's CLIP model, and organizes them into categorized folders based on what's in the picture. Perfect for when you have hundreds or thousands of images but don't want to go on a manhunt for a single picture. 
+Keeper of the Captured scans a directory of your choice, analyzes each image using a local instance of the **Gemma 3 (4B)** model via **Ollama**, and organizes them into categorized folders based on what's in the picture. Perfect for when you have hundreds or thousands of images but don't want to go on a manhunt for a single picture.
 
 ## Features
 
-- Uses CLIP to read image contents
-- Downloads the AI model once, then runs offline
-- Preview mode, to show you which image will go where before commitment
-- Creates organized folders based on image content
-- Sorts images via keywords, ranging from basic desktop screenshots to professional photography
-- Currently only supports JPG, JPEG, PNG, GIF, BMP, and WebP 
+- Uses a localized Vision Language Model (Gemma 3 4B) to read image contents directly on your machine.
+- Automatically handles downloading and pulling the required AI model via Ollama.
+- Runs entirely offline — no data is sent to external APIs.
+- Preview mode to show you which image will go where before commitment.
+- Creates organized folders in your system's `Pictures` directory based on image content.
+- Supports JPG, JPEG, PNG, BMP, and WebP formats.
+- Cross-platform support (Windows, macOS, Linux).
 
-## Installation and Usage (non developers)
+## Installation and Usage
 
-Download the executable file - no Python installation or dependencies required!
+To run this tool, you must have [Ollama](https://ollama.com/) installed on your machine.
 
-1. Download `keeper-of-the-captured.7z` from [here](https://github.com/thelazybastard/keeper-of-the-captured/releases/latest)
-2. Extract the contents to your desired location
-3. Double click on keeper.exe
-4. **Note:** Currently it takes a while to startup, so don't panic if nothing shows up on screen. Give it a while to load.
+### 1. Install Ollama
+
+Download and install Ollama from [their official website](https://ollama.com/download). Ensure the `ollama` command is available in your terminal.
+
+### 2. Download and Setup
+
+Download the standalone executable for your operating system from the [Releases](https://github.com/thelazybastard/keeper-of-the-captured/releases/latest) page.
+
+To make the tool easily accessible from anywhere in your terminal, it is recommended to rename the file and add it to your system `PATH`:
+
+**For Linux / macOS:**
+
+Open your terminal and run the following commands (replace `keeper-linux-x64` with the file you downloaded):
+
+```bash
+# Make the downloaded binary executable
+chmod +x keeper-linux-x64
+
+# Rename and move it to your system PATH
+sudo mv keeper-linux-x64 /usr/local/bin/keeper
+```
+
+Now you can simply type `keeper` in any terminal to run the program!
+
+**For Windows:**
+
+1. Download `keeper-windows-x64.exe`.
+2. Rename the file to `keeper.exe`.
+3. Move `keeper.exe` to a permanent folder (e.g., `C:\Program Files\Keeper\`).
+4. Add that folder to your System `PATH`:
+   - Open Start and search for "Environment Variables".
+   - Click "Edit the system environment variables".
+   - Select "Environment Variables", find "Path", and click "Edit".
+   - Click "New", add the path to the folder containing `keeper.exe`, and save.
+5. You can now launch it by typing `keeper` in Command Prompt or PowerShell.
+
+## Usage
+
+1. Open your terminal or command prompt and run the tool:
+
+   ```bash
+   keeper
+   ```
+
+2. On the first run, the tool will automatically check if the `gemma3:4b` model is downloaded via Ollama. If it isn't, it will trigger the download (this requires a few GBs of free space and may take a while depending on your internet connection).
+
+3. Enter the directory name you want to clean. **Note:** This directory path is relative to your Home folder (e.g., `Downloads/UnsortedImages` or `Desktop/MessyFolder`).
+
+4. The script will analyze the images and print a preview of their new destinations.
+
+5. Confirm with `y` to proceed or `n` to cancel. The images will be moved into categorized folders within your system's `Pictures` directory.
+
+## Example
+
+```text
+Checking for required model (gemma3:4b)...
+Model 'gemma3:4b' is available.
+Enter Directory to clean: Downloads/Photos
+
+Image: "/home/user/Downloads/Photos/beach_sunset.jpg"
+Destination(in Pictures USER folder): Nature & Landscapes
+
+Image: "/home/user/Downloads/Photos/desktop_ss.png"
+Destination(in Pictures USER folder): Screenshots
+
+Proceed with operation? (y/n): y
+Moved "/home/user/Downloads/Photos/beach_sunset.jpg" -> "Nature & Landscapes"
+Moved "/home/user/Downloads/Photos/desktop_ss.png" -> "Screenshots"
+```
 
 ## For Developers
 
 If you want to run from source or modify the code:
 
 **Requirements:**
-- Python 3.13+ 
-- Required packages:
-  ```bash
-  pip install pillow transformers torch
-  ```
+- [Rust / Cargo](https://rustup.rs/) toolchain installed.
+- [Ollama](https://ollama.com/) installed.
 
 **Setup:**
-1. Clone this repo
-2. Install dependencies
-3. Ensure `image_keywords.py` is in the same directory as `keeper_of_the_captured.py`
-4. Run with `python keeper_of_the_captured.py`
 
-### Prerequisites
+1. Clone this repo:
 
-- Windows 10 or 11 operating systems
-
-## Usage (for developers)
-
-1. Run the script:
    ```bash
-   python keeper_of_the_captured.py
+   git clone https://github.com/thelazybastard/keeper-of-the-captured.git
+   cd keeper-of-the-captured
    ```
 
-2. Enter directory name (Must be in Users home directory i.e Videos, Music, Downloads, etc):
+2. Build and run the project using Cargo:
+
+   ```bash
+   cargo run --release
    ```
-   Pictures/Screenshots
-   ```
-
-3. On first run, you'll be asked if you have a HuggingFace token:
-   - If you have one, paste it to avoid warnings and increase download speed
-   - If not, press 'n' to continue (the script will still work)
-
-4. The script will download the CLIP model. around 600MB of free space needed
-
-5. Review the preview showing where each image will be moved
-
-6. Confirm with 'y' to proceed or 'n' to cancel
-
-## Example
-
-```
-Enter directory name (Must be in Users home directory i.e Videos, Music, Downloads, etc): Pictures
-Scan complete!
-beach_sunset.jpg will be moved to Nature
-family_photo.jpg will be moved to People
-car_show.jpg will be moved to Vehicles
-Proceed with cleanup? (y/n): y
-beach_sunset.jpg has been moved to Nature
-family_photo.jpg has been moved to People
-car_show.jpg has been movedd to Vehicles
-Cleanup complete!
-```
 
 ## Future Updates
 
 - Better optimization
-- Linux support
-- MacOS support
-- Daemonized (run in background)
+- Daemonized (run in background / automated watch folders)
+- Custom model selection
 
 ## Contributing
 
@@ -99,11 +129,11 @@ Monish Giani (thelazybastard)
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License — see the LICENSE file for details.
 
 ## Acknowledgements
 
 Built with:
-- [OpenAI CLIP](https://github.com/openai/CLIP)
-- [Hugging Face Transformers](https://huggingface.co/transformers/)
-- [Pillow (PIL)](https://python-pillow.org/)
+- [Ollama](https://ollama.com/)
+- [Gemma Model by Google](https://deepmind.google/technologies/gemma/)
+- [Rust](https://www.rust-lang.org/)

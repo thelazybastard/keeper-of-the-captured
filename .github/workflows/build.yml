@@ -1,0 +1,60 @@
+name: Build Binaries
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch: # Allows you to manually trigger the build from the GitHub UI
+
+jobs:
+  build:
+    name: Build for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            binary_name: keeper
+            artifact_name: keeper-linux-x64
+          - os: macos-latest
+            binary_name: keeper
+            artifact_name: keeper-macos-x64
+          - os: windows-latest
+            binary_name: keeper.exe
+            artifact_name: keeper-windows-x64.exe
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        
+      - name: Build release
+        run: cargo build --release
+
+      # Copy and rename the compiled binary to the expected "keeper" name
+      # (Adjust "keeper-of-the-captured" below if your package name in Cargo.toml is different)
+      - name: Prepare binary (Unix)
+        if: matrix.os != 'windows-latest'
+        run: |
+          cp target/release/keeper-of-the-captured ${{ matrix.binary_name }} || cp target/release/keeper ${{ matrix.binary_name }}
+          chmod +x ${{ matrix.binary_name }}
+
+      - name: Prepare binary (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          if (Test-Path "target\release\keeper-of-the-captured.exe") {
+            Copy-Item "target\release\keeper-of-the-captured.exe" -Destination "${{ matrix.binary_name }}"
+          } else {
+            Copy-Item "target\release\keeper.exe" -Destination "${{ matrix.binary_name }}"
+          }
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.binary_name }}
+          retention-days: 7
