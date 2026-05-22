@@ -1,6 +1,5 @@
-// TODO: load ml model and feed image to ml model
-
 use base64::{Engine as _, engine::general_purpose};
+use dirs::picture_dir;
 use ollama_rs::Ollama;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -12,6 +11,7 @@ use std::pin::Pin;
 use std::process::{Child, Command, Stdio};
 use std::time::Duration;
 use tokio::time::sleep;
+use dirs;
 
 #[derive(Serialize)]
 struct OllamaRequest {
@@ -19,6 +19,13 @@ struct OllamaRequest {
     prompt: String,
     images: Vec<String>,
     stream: bool,
+    options: OllamaOptions,
+}
+
+#[derive(Serialize)]
+struct OllamaOptions {
+    num_gpu: i32,
+    num_ctx: u32,
 }
 
 #[derive(Debug, Deserialize)]
@@ -27,17 +34,31 @@ struct OllamaResponse {
 }
 
 struct OllamaProcessGuard(Child);
-
 impl Drop for OllamaProcessGuard {
     fn drop(&mut self) {
         println!("\nShutting down the Ollama server...");
         let _ = self.0.kill();
         let _ = self.0.wait();
+        
+        let _ = Command::new("pkill")
+            .arg("ollama")
+            .stdout(Stdio::null()) 
+            .stderr(Stdio::null())
+            .status();
     }
 }
 
 #[tokio::main]
 async fn main() {
+    println!("Ensuring no residual user Ollama instances are running...");
+    let _ = Command::new("pkill")
+        .arg("ollama")
+        .stdout(Stdio::null()) 
+        .stderr(Stdio::null())
+        .status();
+
+    sleep(Duration::from_secs(1)).await;
+
     println!("Starting Ollama server...");
 
     let child = Command::new("ollama")
@@ -79,10 +100,10 @@ async fn main() {
         return;
     };
 
-    iterate_directory(path_to_iter).await;
+    iterate_directory(path_to_iter, &home_dir).await;
 }
 
-fn iterate_directory(path_to_iter: PathBuf) -> Pin<Box<dyn Future<Output = ()> + Send>> {
+fn iterate_directory(path_to_iter: PathBuf, home_dir: &str) -> Pin<Box<dyn Future<Output = ()> + Send + '_>> {
     Box::pin(async move {
         let entries = match fs::read_dir(&path_to_iter) {
             Ok(e) => e,
@@ -103,15 +124,61 @@ fn iterate_directory(path_to_iter: PathBuf) -> Pin<Box<dyn Future<Output = ()> +
             };
 
             if entry_path.is_file() && ["jpg", "jpeg", "png", "bmp", "webp"].contains(&&entry_extension.as_str()) {
-                load_ollama(&entry_path).await;
+                load_ollama(&entry_path, false).await;
             } else if entry_path.is_dir() {
-                iterate_directory(entry_path).await;
+                iterate_directory(entry_path, &home_dir).await;
+            }
+        }
+
+        loop {
+            print!("Proceed with operation? (y/n): ");
+            match io::stdout().flush() {
+            Ok(_) => (),
+            Err(_) => return,
+            }
+            let mut confirmation = String::new();
+            match io::stdin().read_line(&mut confirmation) {
+                Ok(_) => (),
+                Err(_) => return,
+            }
+            confirmation = confirmation.trim().to_string();
+
+            if confirmation.to_lowercase() == "y" {
+                break
+            } else if confirmation.to_lowercase() == "n" {
+                panic!("Operation aborted!");
+            } else {
+                continue
+            }
+        }
+
+        let entries2 = match fs::read_dir(&path_to_iter) {
+            Ok(e) => e,
+            Err(_) => return,
+        };
+        for entry in entries2 {
+            let entry = match entry {
+                Ok(e) => e,
+                Err(_) => continue,
+            };
+
+            let entry_path = entry.path();
+
+            let entry_extension = match entry_path.extension() {
+                Some(e) => format!("{}", e.to_string_lossy().to_lowercase()),
+                None => continue,
+            };
+
+            if entry_path.is_file() && ["jpg", "jpeg", "png", "bmp", "webp"].contains(&&entry_extension.as_str()) {
+                load_ollama(&entry_path, true).await;
+            } else if entry_path.is_dir() {
+                iterate_directory(entry_path, &home_dir).await;
             }
         }
     })
 }
 
-async fn load_ollama(entry_path: &PathBuf) {
+async fn load_ollama(entry_path: &PathBuf, operation: bool) {
     let _ollama = Ollama::default();
 
     let image_bytes = match fs::read(&entry_path) {
@@ -122,7 +189,7 @@ async fn load_ollama(entry_path: &PathBuf) {
     let b64_image = general_purpose::STANDARD.encode(&image_bytes);
 
     let request = OllamaRequest {
-        model: "gemma3:4b".to_string(), // or whichever vision-capable tag you pulled
+        model: "gemma3:4b".to_string(),
         prompt: "Describe this image in one category. Reply to this prompt with only the category name.
         From this list of categories: social media, 
         messaging, gaming, productivity, development, people, clothing, animals, nature, technology, 
@@ -131,6 +198,10 @@ async fn load_ollama(entry_path: &PathBuf) {
         screenshots, reactions, medical, scientific, maps, charts, symbols, and temporal.".to_string(),
         images: vec![b64_image],
         stream: false,
+        options: OllamaOptions { 
+            num_gpu: -1,
+            num_ctx: 2048 
+        }, 
     };
 
     let client = Client::new();
@@ -151,6 +222,30 @@ async fn load_ollama(entry_path: &PathBuf) {
                 return;
             }
         };
-    
-    println!("Image: {:?}\nDestination: {}\n", entry_path.display(), resp.response);
+    if operation {
+        match picture_dir() {
+            Some(pictures_path) => {
+                let dest_dir = pictures_path.join(resp.response.trim());
+                if let Err(e) = fs::create_dir_all(&dest_dir) {
+                    println!("Failed to create destination directory: {}", e);
+                    return;
+                }
+
+                if let Some(file_name) = entry_path.file_name() {
+                    let dest_file = dest_dir.join(file_name);
+                    if let Err(e) = fs::rename(&entry_path, &dest_file) {
+                        println!("Failed to move file: {}", e);
+                    } else {
+                        println!("Moved {:?} -> {:?}", entry_path.display(), resp.response);
+                    }
+                }
+            }
+            None => {
+                println!("Could not find the Pictures directory on this system.");
+            }
+        }
+
+    } else {
+         println!("Image: {:?}\nDestination(in Pictures USER folder): {}\n", entry_path.display(), resp.response);
+    }
 }

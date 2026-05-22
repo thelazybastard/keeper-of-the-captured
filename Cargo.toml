@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 base64 = "0.22.1"
+dirs = "6.0.0"
 ollama-rs = "0.3.4"
 reqwest = {version = "0.13.3", features = ["json"]}
 serde = {version = "1.0.228", features = ["derive"]}
