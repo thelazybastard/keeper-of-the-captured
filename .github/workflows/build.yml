@@ -3,9 +3,10 @@ name: Build Binaries
 on:
   push:
     branches: [ "main" ]
+    tags: [ "v*" ]          
   pull_request:
     branches: [ "main" ]
-  workflow_dispatch: # Allows you to manually trigger the build from the GitHub UI
+  workflow_dispatch:
 
 jobs:
   build:
@@ -30,12 +31,10 @@ jobs:
 
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-        
+
       - name: Build release
         run: cargo build --release
 
-      # Copy and rename the compiled binary to the expected "keeper" name
-      # (Adjust "keeper-of-the-captured" below if your package name in Cargo.toml is different)
       - name: Prepare binary (Unix)
         if: matrix.os != 'windows-latest'
         run: |
@@ -58,3 +57,23 @@ jobs:
           name: ${{ matrix.artifact_name }}
           path: ${{ matrix.binary_name }}
           retention-days: 7
+
+  release:
+    name: Create GitHub Release
+    needs: build                        
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')   # only run on v* tags
+    permissions:
+      contents: write                   
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts               
+
+      - name: Create release and upload binaries
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*         
+          generate_release_notes: true  
