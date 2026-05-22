@@ -74,6 +74,31 @@ async fn main() {
 
     sleep(Duration::from_secs(3)).await;
 
+    println!("Checking for required model (gemma3:4b)...");
+    let check_output = Command::new("ollama")
+        .arg("list")
+        .output()
+        .expect("Failed to run ollama list");
+
+    let output_str = String::from_utf8_lossy(&check_output.stdout);
+    if !output_str.contains("gemma3:4b") {
+        println!("Model 'gemma3:4b' not found locally.");
+        println!("Downloading 'gemma3:4b' (this may take a while)...");
+        let pull_status = Command::new("ollama")
+            .arg("pull")
+            .arg("gemma3:4b")
+            .status()
+            .expect("Failed to execute ollama pull");
+            
+        if !pull_status.success() {
+            println!("Failed to download model. Exiting.");
+            return;
+        }
+        println!("Model downloaded successfully!");
+    } else {
+        println!("Model 'gemma3:4b' is available.");
+    }
+
     let home_dir = match env::var("HOME") {
         Ok(e) => e,
         Err(_) => return,
