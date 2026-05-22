@@ -8,7 +8,6 @@ use std::path::{Path, PathBuf};
 use std::{env, fs};
 use std::future::Future;
 use std::pin::Pin;
-use std::process::{Child, Command, Stdio};
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -32,48 +31,8 @@ struct OllamaResponse {
     response: String,
 }
 
-struct OllamaProcessGuard(Child);
-impl Drop for OllamaProcessGuard {
-    fn drop(&mut self) {
-        println!("\nShutting down the Ollama server...");
-        let _ = self.0.kill();
-        let _ = self.0.wait();
-        
-        let _ = Command::new("pkill")
-            .arg("ollama")
-            .stdout(Stdio::null()) 
-            .stderr(Stdio::null())
-            .status();
-    }
-}
-
 #[tokio::main]
 async fn main() {
-    println!("Ensuring no residual user Ollama instances are running...");
-    let _ = Command::new("pkill")
-        .arg("ollama")
-        .stdout(Stdio::null()) 
-        .stderr(Stdio::null())
-        .status();
-
-    sleep(Duration::from_secs(1)).await;
-
-    println!("Starting Ollama server...");
-
-    let child = Command::new("ollama")
-        .arg("serve")
-        .env("OLLAMA_GPU_LAYERS", "999")
-        .env("OLLAMA_NUM_GPU", "999")
-        .stdout(Stdio::null()) 
-        .stderr(Stdio::null())
-        .spawn()
-        .expect("Failed to start Ollama server. Is ollama installed and in your PATH?");
-        
-
-    let _server_guard = OllamaProcessGuard(child);
-
-    sleep(Duration::from_secs(3)).await;
-
     println!("Checking for required model (gemma3:4b)...");
     let check_output = Command::new("ollama")
         .arg("list")
@@ -81,7 +40,7 @@ async fn main() {
         .expect("Failed to run ollama list");
 
     let output_str = String::from_utf8_lossy(&check_output.stdout);
-    if !output_str.contains("gemma3:4b") {
+        if !output_str.contains("gemma3:4b") {
         println!("Model 'gemma3:4b' not found locally.");
         println!("Downloading 'gemma3:4b' (this may take a while)...");
         let pull_status = Command::new("ollama")
@@ -90,11 +49,54 @@ async fn main() {
             .status()
             .expect("Failed to execute ollama pull");
             
-        if !pull_status.success() {
+                if !pull_status.success() {
             println!("Failed to download model. Exiting.");
             return;
         }
         println!("Model downloaded successfully!");
+        
+        println!("Finalizing model on disk...");
+        sleep(Duration::from_secs(3)).await;
+
+        let client = Client::new();
+
+        println!("Clearing model memory state...");
+        let unload_req = serde_json::json!({
+            "model": "gemma3:4b",
+            "keep_alive": 0
+        });
+        let _ = client
+            .post("http://localhost:11434/api/generate")
+            .json(&unload_req)
+            .send()
+            .await;
+
+        sleep(Duration::from_secs(2)).await;
+
+        println!("Warming up model in GPU VRAM...");
+        let warmup_req = OllamaRequest {
+            model: "gemma3:4b".to_string(),
+            prompt: "hi".to_string(),
+            images: vec![],
+            stream: false,
+            options: OllamaOptions { num_gpu: 999, num_ctx: 2048 },
+        };
+        
+        match client
+            .post("http://localhost:11434/api/generate")
+            .json(&warmup_req)
+            .send()
+            .await 
+        {
+            Ok(resp) => {
+                let _ = resp.text().await; 
+                println!("Warmup complete!");
+            }
+            Err(e) => {
+                println!("Warmup request failed: {}", e);
+            }
+        }
+            
     } else {
         println!("Model 'gemma3:4b' is available.");
     }
@@ -214,16 +216,17 @@ async fn load_ollama(entry_path: &PathBuf, operation: bool) {
 
     let request = OllamaRequest {
         model: "gemma3:4b".to_string(),
-        prompt: "Describe this image in one category. Reply to this prompt with only the category name.
-        From this list of categories: social media, 
-        messaging, gaming, productivity, development, people, clothing, animals, nature, technology, 
-        household, food and drink, vehicles, equipment, buildings, indoor, outdoor, celebrations, sports, 
-        entertainment, work, art, photography, documents, text, colors, aesthetic, visual quality, memes, 
-        screenshots, reactions, medical, scientific, maps, charts, symbols, and temporal.".to_string(),
+        prompt: "Describe this image in one category. Reply to this prompt with only the exact category name.
+        From this list of categories: Screenshots, Memes, Animals & Pets, Nature & Landscapes, 
+        People & Portraits, Selfies, Food & Drink, Cars & Vehicles, Architecture & Buildings, 
+        Technology & Gadgets, Art & Illustrations, Anime & Cartoons, Gaming, Documents & Receipts, 
+        Charts & Graphs, Code & Programming, Text & Typography, Clothing & Fashion, 
+        Events & Celebrations, Furniture & Interiors, Space, Sports & Fitness, Social Media, 
+        Wallpapers, Misc.".to_string(),
         images: vec![b64_image],
         stream: false,
         options: OllamaOptions { 
-            num_gpu: -1,
+            num_gpu: 999,
             num_ctx: 2048 
         }, 
     };
